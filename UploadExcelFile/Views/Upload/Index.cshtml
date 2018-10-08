@@ -1,0 +1,8 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+}
+
+<form name="form" method="post" action="/Upload" enctype="multipart/form-data">
+    <input id="files" type="file" name="files" multiple onchange="fileUpload('files');" />
+</form>

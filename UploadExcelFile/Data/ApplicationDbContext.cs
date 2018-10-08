@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using UploadExcelFile.Models;
 
 namespace UploadExcelFile.Data
 {
@@ -12,5 +13,7 @@ namespace UploadExcelFile.Data
             : base(options)
         {
         }
+        public DbSet<UploadExcelFile.Models.File> File { get; set; }
+
     }
 }
