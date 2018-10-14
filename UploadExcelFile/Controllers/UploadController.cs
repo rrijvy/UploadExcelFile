@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using UploadExcelFile.Models;
 
 namespace UploadExcelFile.Controllers
 {
@@ -23,10 +24,7 @@ namespace UploadExcelFile.Controllers
             _environment = environment;
         }
 
-        public IActionResult Index(byte[] file)
-        {
-            return View();
-        }
+
 
         //[HttpPost]
         //public IActionResult Index(IFormFile file)
@@ -58,42 +56,79 @@ namespace UploadExcelFile.Controllers
         //            }
         //            IRow headerRow = sheet.GetRow(0);
         //            int cellCount = headerRow.LastCellNum;
-                    
+
         //        }
         //    }
         //    return View();
         //}
 
 
-        //[HttpPost]
-        //public IActionResult Index(IList<IFormFile> files)
-        //{
-        //    foreach (IFormFile item in files)
-        //    {
-        //        string fileName = ContentDispositionHeaderValue.Parse(item.ContentDisposition).FileName.Trim('"');
-        //        fileName = this.EnsureFilename(fileName);
-        //        using(FileStream fileStream = System.IO.File.Create(this.GetPath(fileName)))
-        //        {
-        //        }
-        //    }
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View();
+        }
 
-        //    return this.Content("Successfull.");
-        //}
+        [HttpPost]
+        public IActionResult Index(IFormFile files)
+        {
 
-        //private string GetPath(string fileName)
-        //{
-        //    string path = _environment.WebRootPath + "\\Upload\\";
-        //    if (!Directory.Exists(path))
-        //    {
-        //        Directory.CreateDirectory(path);
-        //    }
-        //    return path + fileName;
-        //}
+            List<Student> list = new List<Student>();
+
+
+            string fileName = ContentDispositionHeaderValue.Parse(files.ContentDisposition).FileName.Trim('"');
+            string sFileExtension = Path.GetExtension(files.FileName).ToLower();
+            ISheet sheet;
+
+            //fileName = this.EnsureFilename(fileName);
+
+            using (var stream = new FileStream(GetPath(fileName), FileMode.Create))
+            {
+                files.CopyTo(stream);
+                if (sFileExtension == ".xls")
+                {
+                    HSSFWorkbook hssfwb = new HSSFWorkbook(stream);
+                    sheet = hssfwb.GetSheetAt(0);
+                }
+                else
+                {
+                    XSSFWorkbook xssfwb = new XSSFWorkbook(stream);
+                    sheet = xssfwb.GetSheetAt(0);
+                }
+                IRow headerRow = sheet.GetRow(0);
+                int cellCount = headerRow.LastCellNum;
+                for (int i = 1; i <= sheet.LastRowNum; i++)
+                {
+                    IRow row = sheet.GetRow(i);
+                    if (row == null) continue;
+                    for (int j = row.FirstCellNum; j < cellCount; j++)
+                    {
+                        list.Add()
+                    }
+                }
+
+            }
+
+
+
+            return this.Content("Successfull.");
+        }
+
+        private string GetPath(string fileName)
+        {
+            string path = _environment.WebRootPath + "\\Upload\\";
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            return path + fileName;
+        }
 
         //private string EnsureFilename(string fileName)
         //{
         //    if (fileName.Contains("\\"))
-        //        fileName = fileName.Substring(fileName.LastIndexOf("\\") + i);
+        //        fileName = fileName.Substring(fileName.LastIndexOf("\\") + 1);
+
         //    return fileName;
         //}
     }
