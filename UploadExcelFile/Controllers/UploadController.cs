@@ -89,24 +89,24 @@ namespace UploadExcelFile.Controllers
             {
                 files.CopyTo(stream);
                 var ep = new ExcelPackage(new FileInfo(GetPath(fileName)));
-                var wp = ep.Workbook.Worksheets["sheet1"];
+                var worksheet = ep.Workbook.Worksheets["sheet1"];
 
-                string[,] cellValue = new string[wp.Dimension.End.Row - 1, wp.Dimension.End.Column];
+                string[,] cellValue = new string[worksheet.Dimension.End.Row - 1, worksheet.Dimension.End.Column];
                 List<Student> students = new List<Student>(cellValue.Length);
 
-                for (int i = wp.Dimension.Start.Row + 1; i <= wp.Dimension.End.Row; i++)
+                for (int i = worksheet.Dimension.Start.Row + 1; i <= worksheet.Dimension.End.Row; i++)
                 {
                     var student = new Student();
 
-                    for (int j = wp.Dimension.Start.Column; j <= wp.Dimension.End.Column; j++)
+                    for (int j = worksheet.Dimension.Start.Column; j <= worksheet.Dimension.End.Column; j++)
                     {
-                        cellValue[i - 2, j - 1] = wp.Cells[i, j].Value.ToString();
+                        cellValue[i - 2, j - 1] = worksheet.Cells[i, j].Value.ToString();
                     }
                 }
 
-                for (int i = 0; i < wp.Dimension.End.Row - 1; i++)
+                for (int i = 0; i < worksheet.Dimension.End.Row - 1; i++)
                 {
-                    for (int j = 0; j < wp.Dimension.End.Column; j = j + 3)
+                    for (int j = 0; j < worksheet.Dimension.End.Column; j = j + 3)
                     {
                         students.Add(new Student { Name = cellValue[i, j], Age = int.Parse(cellValue[i, j + 1]), Gender = cellValue[i, j + 2] });
                     }
