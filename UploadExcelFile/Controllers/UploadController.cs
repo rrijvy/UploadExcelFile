@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using OfficeOpenXml;
+using UploadExcelFile.Data;
 using UploadExcelFile.Models;
 
 namespace UploadExcelFile.Controllers
@@ -18,10 +20,13 @@ namespace UploadExcelFile.Controllers
     public class UploadController : Controller
     {
         private readonly IHostingEnvironment _environment;
+        private readonly ApplicationDbContext _context;
 
-        public UploadController(IHostingEnvironment environment)
+        public UploadController(IHostingEnvironment environment,
+                               ApplicationDbContext context)
         {
             _environment = environment;
+            _context = context;
         }
 
 
@@ -72,46 +77,52 @@ namespace UploadExcelFile.Controllers
         [HttpPost]
         public IActionResult Index(IFormFile files)
         {
-
             List<Student> list = new List<Student>();
-
-
             string fileName = ContentDispositionHeaderValue.Parse(files.ContentDisposition).FileName.Trim('"');
             string sFileExtension = Path.GetExtension(files.FileName).ToLower();
-            ISheet sheet;
+
+
 
             //fileName = this.EnsureFilename(fileName);
 
             using (var stream = new FileStream(GetPath(fileName), FileMode.Create))
             {
                 files.CopyTo(stream);
-                if (sFileExtension == ".xls")
+                var ep = new ExcelPackage(new FileInfo(GetPath(fileName)));
+                var wp = ep.Workbook.Worksheets["sheet1"];
+
+                string[,] cellValue = new string[wp.Dimension.End.Row - 1, wp.Dimension.End.Column];
+                List<Student> students = new List<Student>(cellValue.Length);
+
+                for (int i = wp.Dimension.Start.Row + 1; i <= wp.Dimension.End.Row; i++)
                 {
-                    HSSFWorkbook hssfwb = new HSSFWorkbook(stream);
-                    sheet = hssfwb.GetSheetAt(0);
-                }
-                else
-                {
-                    XSSFWorkbook xssfwb = new XSSFWorkbook(stream);
-                    sheet = xssfwb.GetSheetAt(0);
-                }
-                IRow headerRow = sheet.GetRow(0);
-                int cellCount = headerRow.LastCellNum;
-                for (int i = 1; i <= sheet.LastRowNum; i++)
-                {
-                    IRow row = sheet.GetRow(i);
-                    if (row == null) continue;
-                    for (int j = row.FirstCellNum; j < cellCount; j++)
+                    var student = new Student();
+
+                    for (int j = wp.Dimension.Start.Column; j <= wp.Dimension.End.Column; j++)
                     {
-                        list.Add()
+                        cellValue[i - 2, j - 1] = wp.Cells[i, j].Value.ToString();
                     }
                 }
 
+                for (int i = 0; i < wp.Dimension.End.Row - 1; i++)
+                {
+                    for (int j = 0; j < wp.Dimension.End.Column; j = j + 3)
+                    {
+                        students.Add(new Student { Name = cellValue[i, j], Age = int.Parse(cellValue[i, j + 1]), Gender = cellValue[i, j + 2] });
+                    }
+                }
+
+                foreach (var item in students)
+                {
+                    _context.Students.Add(item);
+                }
+                _context.SaveChanges();
+                return Json(students);
             }
 
 
 
-            return this.Content("Successfull.");
+
         }
 
         private string GetPath(string fileName)
@@ -131,5 +142,6 @@ namespace UploadExcelFile.Controllers
 
         //    return fileName;
         //}
+
     }
 }

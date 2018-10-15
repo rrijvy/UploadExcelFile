@@ -14,6 +14,6 @@ namespace UploadExcelFile.Data
         {
         }
         public DbSet<UploadExcelFile.Models.File> File { get; set; }
-
+        public DbSet<UploadExcelFile.Models.Student> Students { get; set; }
     }
 }
